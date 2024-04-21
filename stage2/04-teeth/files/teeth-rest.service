@@ -1,0 +1,11 @@
+[Unit]
+Description=TCP to Ethernet REST service
+After=network.target
+
+[Service]
+Type=exec
+ExecStart=/bin/sh -c "cd /opt/teeth && . bin/activate && uvicorn --host 0.0.0.0 --port 80 teeth:app"
+ExecStartPost=/usr/bin/timeout 30 sh -c 'while ! ss -H -t -l -n sport = :80 | grep -q "^LISTEN.*:80"; do sleep 1; done'
+
+[Install]
+WantedBy=default.target

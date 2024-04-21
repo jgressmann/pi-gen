@@ -1,0 +1,1 @@
+KERNEL!="eth0", SUBSYSTEM=="net", SUBSYSTEMS=="usb", ACTION=="add", TAG+="systemd", ENV{SYSTEMD_WANTS}+="teeth-device@%k.service"

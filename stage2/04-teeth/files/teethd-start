@@ -1,0 +1,87 @@
+#!/bin/bash
+
+if [ $# -ne 1 ]; then
+	echo "ERROR: $(basename $0) NIC"
+	exit 1
+fi
+
+default_wait_timeout_s=3
+target=$1
+shift
+
+port_file_path=/tmp/${target}.port
+teethd_pid=
+
+set -m
+set -e
+
+cleanup()
+{
+	if [ "$teethd_pid" != "" ]; then
+		kill $teethd_pid 2>/dev/null || true
+	fi
+
+	rm -f $port_file_path 2>/dev/null
+}
+
+trap cleanup EXIT
+
+echo Starting service for $target
+
+# setup device
+#/usr/sbin/ethtool -K $target gso off tso off
+/usr/sbin/sysctl -q -w net.ipv6.conf.${target}.disable_ipv6=1
+/usr/sbin/ip link set up dev ${target}
+
+# start service
+rm -f $port_file_path
+/usr/local/bin/teethd -v -p 0 --port-file $port_file_path eth0 $target &
+teethd_pid=$!
+
+set +e
+
+# wait for port file
+found=0
+
+for i in {1..$default_wait_timeout_s}; do
+	sleep 1
+	if [ -f $port_file_path ]; then
+		found=1
+		break
+	fi
+done
+
+if [ 0 -eq $found ]; then
+	echo "ERROR: timeout waiting for $port_file_path ($default_wait_timeout_s s)"
+	exit 1
+fi
+
+
+# fetch port
+port=$(cat $port_file_path)
+
+if [ "$port" = "" ]; then
+	echo "ERROR: failed to read port from $port_file_path"
+        exit 1
+fi
+
+# report port to REST service
+curl -q --no-progress-meter \
+  -X PATCH http://127.0.0.1:80/nics/$target \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d "{\"name\":\"$target\",\"port\": $port}"
+
+if [ $? -ne 0 ]; then
+	echo "ERROR: failed to report port to REST service"
+        exit 1
+fi
+
+
+# back to foreground
+fg
+
+
+echo Stopped service for $target
+
+exit 0

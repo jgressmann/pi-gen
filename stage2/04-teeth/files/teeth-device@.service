@@ -1,0 +1,12 @@
+[Unit]
+Description=TCP to Ethernet device redirection
+Requires=network.target
+BindsTo=sys-subsystem-net-devices-%i.device
+Requires=teeth-rest.service
+After=teeth-rest.service
+
+[Service]
+Type=exec
+ExecStart=/usr/local/bin/teethd-start %i
+CPUSchedulingPriority=10
+CPUSchedulingPolicy=rr
