@@ -1,0 +1,4 @@
+IMG_NAME=teeth
+STAGE_LIST="stage0 stage1 stage2"
+unset PI_GEN_RELEASE
+DEPLOY_COMPRESSION=gz
