@@ -6,6 +6,9 @@ which was in turn derived from the Raspbian project.
 **Note**: Raspberry Pi OS 32 bit images are based primarily on Raspbian, while
 Raspberry Pi OS 64 bit images are based primarily on Debian.
 
+**Note**: The default configuration is customized to generate Raspberry Pi OS image
+suitable for project teeth. You can read about the project [here](https://github.com/jgressmann/teeth).
+
 ## Dependencies
 
 pi-gen runs on Debian-based operating systems released after 2017, and we
